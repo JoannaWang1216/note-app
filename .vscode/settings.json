@@ -1,3 +1,6 @@
 {
-    "files.autoSave": "onFocusChange",
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "files.autoSave": "onFocusChange",
+  "editor.codeActionsOnSave": ["source.organizeImports", "source.fixAll"]
 }
