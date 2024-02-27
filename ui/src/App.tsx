@@ -36,13 +36,11 @@ function App() {
           <Card variant="outlined" sx={{ minWidth: 600, boxShadow: 3 }}>
             <Input
               disableUnderline
-              inputProps={{
-                onClick: () => setIsDetailedInputExpanded(true),
-                style: { fontWeight: 700 },
-              }}
+              inputProps={{ style: { fontWeight: 700 } }}
               fullWidth
               sx={{ p: 1.5 }}
               placeholder="Take a note..."
+              onClick={() => setIsDetailedInputExpanded(true)}
             />
           </Card>
         ) : (
