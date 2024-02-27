@@ -52,7 +52,7 @@ function App() {
               }}
               fullWidth
               multiline
-              sx={{ p: 1.5, mb: 1.5 }}
+              sx={{ p: 1.5, mb: 1.2 }}
               placeholder="Title"
             />
             <Input
