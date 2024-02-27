@@ -1,10 +1,12 @@
 import { Note as NoteIcon } from "@mui/icons-material";
+import { Masonry } from "@mui/lab";
 import {
   AppBar,
   Box,
   Button,
   Card,
   CardActions,
+  CardContent,
   Input,
   Toolbar,
   Typography,
@@ -23,6 +25,24 @@ function App() {
     title: "",
     content: "",
   });
+
+  interface Notes {
+    id: number;
+    note: Note;
+  }
+  const [notes, setNotes] = React.useState<Notes[]>([]);
+
+  function addToNotes() {
+    const updatedNotes = [...notes];
+    if (newNote.title.length > 0 || newNote.content.length > 0) {
+      updatedNotes.unshift({ id: Date.now(), note: { ...newNote } });
+      setNotes(updatedNotes);
+      setNewNote({ title: "", content: "" });
+      setIsDetailedInputExpanded(false);
+    } else {
+      setIsDetailedInputExpanded(false);
+    }
+  }
 
   return (
     <Box>
@@ -89,11 +109,35 @@ function App() {
               }}
             />
             <CardActions>
-              <Button sx={{ color: "#808080" }}>Close</Button>
+              <Button sx={{ color: "#808080" }} onClick={() => addToNotes()}>
+                Close
+              </Button>
             </CardActions>
           </Card>
         )}
       </Box>
+      <Masonry columns={5} spacing={1}>
+        {notes.map((note) => (
+          <Card
+            key={note.id}
+            variant="outlined"
+            sx={{ width: 250, boxShadow: 3 }}
+          >
+            <CardContent>
+              <Typography style={{ wordWrap: "break-word" }}>
+                {note.note.title}
+              </Typography>
+              <Typography style={{ wordWrap: "break-word" }}>
+                {note.note.content}
+              </Typography>
+            </CardContent>
+            <CardActions>
+              <Button sx={{ color: "#808080" }}>Edit</Button>
+              <Button sx={{ color: "#808080" }}>Delete</Button>
+            </CardActions>
+          </Card>
+        ))}
+      </Masonry>
     </Box>
   );
 }
