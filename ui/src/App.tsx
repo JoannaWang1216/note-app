@@ -32,6 +32,9 @@ function App() {
   }
   const [notes, setNotes] = React.useState<Notes[]>([]);
 
+  const [isDetailedInputFirstExpanded, setIsDetailedInputFirstExpanded] =
+    React.useState<boolean>(false);
+
   function addToNotes() {
     const updatedNotes = [...notes];
     if (newNote.title.length > 0 || newNote.content.length > 0) {
@@ -71,7 +74,10 @@ function App() {
               fullWidth
               sx={{ p: 1.5 }}
               placeholder="Take a note..."
-              onClick={() => setIsDetailedInputExpanded(true)}
+              onClick={() => {
+                setIsDetailedInputExpanded(true);
+                setIsDetailedInputFirstExpanded(true);
+              }}
             />
           </Card>
         ) : (
@@ -91,6 +97,9 @@ function App() {
                   title: e.target.value,
                 });
               }}
+              inputRef={(input) =>
+                isDetailedInputFirstExpanded === true && input?.focus()
+              }
             />
             <Input
               disableUnderline
@@ -107,6 +116,7 @@ function App() {
                   content: e.target.value,
                 });
               }}
+              onFocus={() => setIsDetailedInputFirstExpanded(false)}
             />
             <CardActions>
               <Button sx={{ color: "#808080" }} onClick={() => addToNotes()}>
@@ -116,28 +126,30 @@ function App() {
           </Card>
         )}
       </Box>
-      <Masonry columns={5} spacing={1}>
-        {notes.map((note) => (
-          <Card
-            key={note.id}
-            variant="outlined"
-            sx={{ width: 250, boxShadow: 3 }}
-          >
-            <CardContent>
-              <Typography style={{ wordWrap: "break-word" }}>
-                {note.note.title}
-              </Typography>
-              <Typography style={{ wordWrap: "break-word" }}>
-                {note.note.content}
-              </Typography>
-            </CardContent>
-            <CardActions>
-              <Button sx={{ color: "#808080" }}>Edit</Button>
-              <Button sx={{ color: "#808080" }}>Delete</Button>
-            </CardActions>
-          </Card>
-        ))}
-      </Masonry>
+      <Box pl={1}>
+        <Masonry columns={5} spacing={1}>
+          {notes.map((note) => (
+            <Card
+              key={note.id}
+              variant="outlined"
+              sx={{ width: 250, boxShadow: 3 }}
+            >
+              <CardContent>
+                <Typography style={{ wordWrap: "break-word" }}>
+                  {note.note.title}
+                </Typography>
+                <Typography style={{ wordWrap: "break-word" }}>
+                  {note.note.content}
+                </Typography>
+              </CardContent>
+              <CardActions>
+                <Button sx={{ color: "#808080" }}>Edit</Button>
+                <Button sx={{ color: "#808080" }}>Delete</Button>
+              </CardActions>
+            </Card>
+          ))}
+        </Masonry>
+      </Box>
     </Box>
   );
 }
