@@ -10,6 +10,7 @@ import {
   Input,
   Toolbar,
   Typography,
+  Modal,
 } from "@mui/material";
 import * as React from "react";
 
@@ -27,24 +28,37 @@ function App() {
   });
 
   interface Notes {
-    id: number;
+    id: string;
     note: Note;
   }
   const [notes, setNotes] = React.useState<Notes[]>([]);
 
   const [isDetailedInputFirstExpanded, setIsDetailedInputFirstExpanded] =
     React.useState<boolean>(false);
+  
+  const [isDetailedNoteShowed, setIsDetailedNoteShowed] =
+    React.useState<boolean>(false);
+  
+  const [noteToEdit, setNoteToEdit] = React.useState<Notes>({
+    id: "",
+    note: { title: "", content: "" }
+  });
 
   function addToNotes() {
     const updatedNotes = [...notes];
     if (newNote.title.length > 0 || newNote.content.length > 0) {
-      updatedNotes.unshift({ id: Date.now(), note: { ...newNote } });
+      updatedNotes.unshift({ id: Date.now().toString(), note: { ...newNote } });
       setNotes(updatedNotes);
       setNewNote({ title: "", content: "" });
       setIsDetailedInputExpanded(false);
     } else {
       setIsDetailedInputExpanded(false);
     }
+  }
+
+  function showPopUpNote(id: string) {
+    setNoteToEdit(notes.filter((note) => note.id === id)[0]);
+    setIsDetailedNoteShowed(true);
   }
 
   return (
@@ -126,6 +140,52 @@ function App() {
           </Card>
         )}
       </Box>
+      <Box>
+        <Modal
+          open={isDetailedNoteShowed}
+          onClose={() => setIsDetailedNoteShowed(false)}
+        >
+          <Card variant="outlined" sx={{ minWidth: 600, boxShadow: 3 }}>
+            <Input
+              disableUnderline
+              inputProps={{
+                style: { fontWeight: 700 },
+              }}
+              fullWidth
+              multiline
+              sx={{ p: 1.5, mb: 1.5 }}
+              onChange={(e) => {
+                setNoteToEdit({
+                  ...noteToEdit,
+                  note: { ...noteToEdit["note"], title: e.target.value },
+                });
+              }}
+              value={noteToEdit.note.title}
+            />
+            <Input
+              disableUnderline
+              inputProps={{
+                style: { fontWeight: 700 },
+              }}
+              fullWidth
+              multiline
+              sx={{ p: 1.5, mb: 1 }}
+              onChange={(e) => {
+                setNoteToEdit({
+                  ...noteToEdit,
+                  note: { ...noteToEdit["note"], content: e.target.value },
+                });
+              }}
+              value={noteToEdit.note.content}
+            />
+            <CardActions>
+              <Button sx={{ color: "#808080" }}>
+                Close
+              </Button>
+            </CardActions>
+          </Card>
+        </Modal>
+      </Box>
       <Box pl={1}>
         <Masonry columns={5} spacing={1}>
           {notes.map((note) => (
@@ -143,7 +203,7 @@ function App() {
                 </Typography>
               </CardContent>
               <CardActions>
-                <Button sx={{ color: "#808080" }}>Edit</Button>
+                <Button sx={{ color: "#808080" }} onClick={() => showPopUpNote(note.id)}>Edit</Button>
                 <Button sx={{ color: "#808080" }}>Delete</Button>
               </CardActions>
             </Card>
