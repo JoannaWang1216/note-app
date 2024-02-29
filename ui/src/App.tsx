@@ -1,4 +1,5 @@
-import { Note as NoteIcon } from "@mui/icons-material";
+import { Note as NoteIcon, Delete } from "@mui/icons-material";
+import { ClickAwayListener } from '@mui/base';
 import { Masonry } from "@mui/lab";
 import {
   AppBar,
@@ -7,10 +8,12 @@ import {
   Card,
   CardActions,
   CardContent,
+  CardActionArea,
   Input,
   Toolbar,
   Typography,
   Modal,
+  IconButton,
 } from "@mui/material";
 import * as React from "react";
 
@@ -61,6 +64,26 @@ function App() {
     setIsDetailedNoteShowed(true);
   }
 
+  function updateNotes() {
+    const updatedNotes = notes.filter((note) => note.id !== noteToEdit.id);
+    updatedNotes.unshift({ ...noteToEdit });
+    setNotes(updatedNotes);
+    setNoteToEdit({
+      id: "",
+    note: { title: "", content: "" }
+    });
+    setIsDetailedNoteShowed(false);
+  }
+
+  function removeFromNotes(id: string) {
+    setNotes(notes.filter((note) => note.id !== id));
+    setNoteToEdit({
+      id: "",
+    note: { title: "", content: "" }
+    });
+    setIsDetailedNoteShowed(false);
+  }
+
   return (
     <Box>
       <AppBar position="static" style={{ background: "#808080" }}>
@@ -71,14 +94,14 @@ function App() {
           </Typography>
         </Toolbar>
       </AppBar>
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        width="auto"
-        p={2}
-      >
-        {isDetailedInputExpanded === false ? (
+      {isDetailedInputExpanded === false ? (
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          width="auto"
+          p={2}
+        >
           <Card variant="outlined" sx={{ minWidth: 600, boxShadow: 3 }}>
             <Input
               disableUnderline
@@ -94,58 +117,69 @@ function App() {
               }}
             />
           </Card>
+        </Box>
         ) : (
-          <Card variant="outlined" sx={{ minWidth: 600, boxShadow: 3 }}>
-            <Input
-              disableUnderline
-              inputProps={{
-                style: { fontWeight: 700 },
-              }}
-              fullWidth
-              multiline
-              sx={{ p: 1.5, mb: 1.5 }}
-              placeholder="Title"
-              onChange={(e) => {
-                setNewNote({
-                  ...newNote,
-                  title: e.target.value,
-                });
-              }}
-              inputRef={(input) =>
-                isDetailedInputFirstExpanded === true && input?.focus()
-              }
-            />
-            <Input
-              disableUnderline
-              inputProps={{
-                style: { fontWeight: 700 },
-              }}
-              fullWidth
-              multiline
-              sx={{ p: 1.5, mb: 1 }}
-              placeholder="Take a note..."
-              onChange={(e) => {
-                setNewNote({
-                  ...newNote,
-                  content: e.target.value,
-                });
-              }}
-              onFocus={() => setIsDetailedInputFirstExpanded(false)}
-            />
-            <CardActions>
-              <Button sx={{ color: "#808080" }} onClick={() => addToNotes()}>
-                Close
-              </Button>
-            </CardActions>
-          </Card>
-        )}
-      </Box>
+        <ClickAwayListener onClickAway={() => addToNotes()}>
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            width="auto"
+            p={2}
+          >
+            <Card variant="outlined" sx={{ minWidth: 600, boxShadow: 3 }}>
+              <Input
+                disableUnderline
+                inputProps={{
+                  style: { fontWeight: 700 },
+                }}
+                fullWidth
+                multiline
+                sx={{ p: 1.5, mb: 1.5 }}
+                placeholder="Title"
+                onChange={(e) => {
+                  setNewNote({
+                    ...newNote,
+                    title: e.target.value,
+                  });
+                }}
+                inputRef={(input) =>
+                  isDetailedInputFirstExpanded === true && input?.focus()
+                }
+              />
+              <Input
+                disableUnderline
+                inputProps={{
+                  style: { fontWeight: 700 },
+                }}
+                fullWidth
+                multiline
+                sx={{ p: 1.5, mb: 1 }}
+                placeholder="Take a note..."
+                onChange={(e) => {
+                  setNewNote({
+                    ...newNote,
+                    content: e.target.value,
+                  });
+                }}
+                onFocus={() => setIsDetailedInputFirstExpanded(false)}
+              />
+              <CardActions style={{ justifyContent: "flex-end" }}>
+                <Button sx={{ color: "#808080" }} onClick={() => addToNotes()}>
+                  Close
+                </Button>
+              </CardActions>
+            </Card>
+          </Box>
+        </ClickAwayListener>
+      )}
       <Box>
         <Modal
+          style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
           open={isDetailedNoteShowed}
-          onClose={() => setIsDetailedNoteShowed(false)}
+          onClose={() => updateNotes()}
         >
-          <Card variant="outlined" sx={{ minWidth: 600, boxShadow: 3 }}>
+          <Card variant="outlined" sx={{ width: 600, boxShadow: 3 }}>
             <Input
               disableUnderline
               inputProps={{
@@ -178,8 +212,11 @@ function App() {
               }}
               value={noteToEdit.note.content}
             />
-            <CardActions>
-              <Button sx={{ color: "#808080" }}>
+            <CardActions style={{ justifyContent: "space-between" }}>
+              <IconButton onClick={() => removeFromNotes(noteToEdit.id)}>
+                <Delete> Delete </Delete>
+              </IconButton>
+              <Button sx={{ color: "#808080" }} onClick={() => updateNotes()}>
                 Close
               </Button>
             </CardActions>
@@ -194,18 +231,16 @@ function App() {
               variant="outlined"
               sx={{ width: 250, boxShadow: 3 }}
             >
-              <CardContent>
-                <Typography style={{ wordWrap: "break-word" }}>
-                  {note.note.title}
-                </Typography>
-                <Typography style={{ wordWrap: "break-word" }}>
-                  {note.note.content}
-                </Typography>
-              </CardContent>
-              <CardActions>
-                <Button sx={{ color: "#808080" }} onClick={() => showPopUpNote(note.id)}>Edit</Button>
-                <Button sx={{ color: "#808080" }}>Delete</Button>
-              </CardActions>
+              <CardActionArea onClick={() => showPopUpNote(note.id)}>
+                <CardContent>
+                  <Typography style={{ wordWrap: "break-word" }}>
+                    {note.note.title}
+                  </Typography>
+                  <Typography style={{ wordWrap: "break-word" }}>
+                    {note.note.content}
+                  </Typography>
+                </CardContent>
+              </CardActionArea>
             </Card>
           ))}
         </Masonry>
