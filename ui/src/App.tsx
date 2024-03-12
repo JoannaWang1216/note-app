@@ -1,34 +1,28 @@
-import { Note as NoteIcon, Delete } from "@mui/icons-material";
-import { ClickAwayListener } from '@mui/base';
+import { ClickAwayListener } from "@mui/base";
+import { Delete, Note as NoteIcon } from "@mui/icons-material";
 import { Masonry } from "@mui/lab";
 import {
   AppBar,
   Box,
   Button,
   Card,
+  CardActionArea,
   CardActions,
   CardContent,
-  CardActionArea,
+  IconButton,
   Input,
+  Modal,
   Toolbar,
   Typography,
-  Modal,
-  IconButton,
 } from "@mui/material";
 import * as React from "react";
 
 function App() {
-  const [isDetailedInputExpanded, setIsDetailedInputExpanded] =
-    React.useState<boolean>(false);
-
   interface Note {
     title: string;
     content: string;
   }
-  const [newNote, setNewNote] = React.useState<Note>({
-    title: "",
-    content: "",
-  });
+  const [newNote, setNewNote] = React.useState<undefined | Note>(undefined);
 
   interface Notes {
     id: string;
@@ -38,50 +32,34 @@ function App() {
 
   const [isDetailedInputFirstExpanded, setIsDetailedInputFirstExpanded] =
     React.useState<boolean>(false);
-  
-  const [isDetailedNoteShowed, setIsDetailedNoteShowed] =
-    React.useState<boolean>(false);
-  
-  const [noteToEdit, setNoteToEdit] = React.useState<Notes>({
-    id: "",
-    note: { title: "", content: "" }
-  });
+
+  const [noteToEdit, setNoteToEdit] = React.useState<undefined | Notes>(
+    undefined,
+  );
 
   function addToNotes() {
     const updatedNotes = [...notes];
+    if (newNote === undefined) return;
     if (newNote.title.length > 0 || newNote.content.length > 0) {
       updatedNotes.unshift({ id: Date.now().toString(), note: { ...newNote } });
       setNotes(updatedNotes);
-      setNewNote({ title: "", content: "" });
-      setIsDetailedInputExpanded(false);
+      setNewNote(undefined);
     } else {
-      setIsDetailedInputExpanded(false);
+      setNewNote(undefined);
     }
   }
 
-  function showPopUpNote(id: string) {
-    setNoteToEdit(notes.filter((note) => note.id === id)[0]);
-    setIsDetailedNoteShowed(true);
-  }
-
   function updateNotes() {
+    if (noteToEdit === undefined) return;
     const updatedNotes = notes.filter((note) => note.id !== noteToEdit.id);
     updatedNotes.unshift({ ...noteToEdit });
     setNotes(updatedNotes);
-    setNoteToEdit({
-      id: "",
-    note: { title: "", content: "" }
-    });
-    setIsDetailedNoteShowed(false);
+    setNoteToEdit(undefined);
   }
 
   function removeFromNotes(id: string) {
     setNotes(notes.filter((note) => note.id !== id));
-    setNoteToEdit({
-      id: "",
-    note: { title: "", content: "" }
-    });
-    setIsDetailedNoteShowed(false);
+    setNoteToEdit(undefined);
   }
 
   return (
@@ -94,7 +72,7 @@ function App() {
           </Typography>
         </Toolbar>
       </AppBar>
-      {isDetailedInputExpanded === false ? (
+      {newNote === undefined ? (
         <Box
           display="flex"
           justifyContent="center"
@@ -112,13 +90,16 @@ function App() {
               sx={{ p: 1.5 }}
               placeholder="Take a note..."
               onClick={() => {
-                setIsDetailedInputExpanded(true);
+                setNewNote({
+                  title: "",
+                  content: "",
+                });
                 setIsDetailedInputFirstExpanded(true);
               }}
             />
           </Card>
         </Box>
-        ) : (
+      ) : (
         <ClickAwayListener onClickAway={() => addToNotes()}>
           <Box
             display="flex"
@@ -175,8 +156,12 @@ function App() {
       )}
       <Box>
         <Modal
-          style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
-          open={isDetailedNoteShowed}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+          open={noteToEdit !== undefined}
           onClose={() => updateNotes()}
         >
           <Card variant="outlined" sx={{ width: 600, boxShadow: 3 }}>
@@ -189,12 +174,13 @@ function App() {
               multiline
               sx={{ p: 1.5, mb: 1.5 }}
               onChange={(e) => {
+                if (noteToEdit === undefined) return;
                 setNoteToEdit({
                   ...noteToEdit,
                   note: { ...noteToEdit["note"], title: e.target.value },
                 });
               }}
-              value={noteToEdit.note.title}
+              value={noteToEdit === undefined ? "" : noteToEdit.note.title}
             />
             <Input
               disableUnderline
@@ -205,15 +191,21 @@ function App() {
               multiline
               sx={{ p: 1.5, mb: 1 }}
               onChange={(e) => {
+                if (noteToEdit === undefined) return;
                 setNoteToEdit({
                   ...noteToEdit,
                   note: { ...noteToEdit["note"], content: e.target.value },
                 });
               }}
-              value={noteToEdit.note.content}
+              value={noteToEdit === undefined ? "" : noteToEdit.note.content}
             />
             <CardActions style={{ justifyContent: "space-between" }}>
-              <IconButton onClick={() => removeFromNotes(noteToEdit.id)}>
+              <IconButton
+                onClick={() => {
+                  if (noteToEdit === undefined) return;
+                  removeFromNotes(noteToEdit.id);
+                }}
+              >
                 <Delete> Delete </Delete>
               </IconButton>
               <Button sx={{ color: "#808080" }} onClick={() => updateNotes()}>
@@ -231,7 +223,11 @@ function App() {
               variant="outlined"
               sx={{ width: 250, boxShadow: 3 }}
             >
-              <CardActionArea onClick={() => showPopUpNote(note.id)}>
+              <CardActionArea
+                onClick={() =>
+                  setNoteToEdit(notes.filter((n) => n.id === note.id)[0])
+                }
+              >
                 <CardContent>
                   <Typography style={{ wordWrap: "break-word" }}>
                     {note.note.title}
