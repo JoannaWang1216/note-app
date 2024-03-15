@@ -25,7 +25,13 @@ function App() {
   };
   const [newNote, setNewNote] = React.useState<undefined | Note>(undefined);
 
-  const [notes, setNotes] = React.useState<Note[]>([]);
+  const storedNotes = localStorage.getItem("notes");
+  const [notes, setNotes] = React.useState<Note[]>(
+    storedNotes ? JSON.parse(storedNotes) : [],
+  );
+  React.useEffect(() => {
+    localStorage.setItem("notes", JSON.stringify(notes));
+  }, [notes]);
 
   const [editingNote, setEditingNote] = React.useState<undefined | Note>(
     undefined,
