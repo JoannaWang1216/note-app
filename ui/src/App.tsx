@@ -18,48 +18,42 @@ import {
 import * as React from "react";
 
 function App() {
-  interface Note {
+  type Note = {
+    id: string;
     title: string;
     content: string;
-  }
+  };
   const [newNote, setNewNote] = React.useState<undefined | Note>(undefined);
 
-  interface Notes {
-    id: string;
-    note: Note;
-  }
-  const [notes, setNotes] = React.useState<Notes[]>([]);
+  const [notes, setNotes] = React.useState<Note[]>([]);
 
-  const [isDetailedInputFirstExpanded, setIsDetailedInputFirstExpanded] =
-    React.useState<boolean>(false);
-
-  const [noteToEdit, setNoteToEdit] = React.useState<undefined | Notes>(
+  const [editingNote, setEditingNote] = React.useState<undefined | Note>(
     undefined,
   );
 
-  function addToNotes() {
-    const updatedNotes = [...notes];
-    if (newNote === undefined) return;
-    if (newNote.title.length > 0 || newNote.content.length > 0) {
-      updatedNotes.unshift({ id: Date.now().toString(), note: { ...newNote } });
-      setNotes(updatedNotes);
+  function addNote(note?: Note) {
+    if (note === undefined) return;
+    if (note.title.length === 0 && note.content.length === 0) {
       setNewNote(undefined);
-    } else {
-      setNewNote(undefined);
+      return;
     }
+    setNotes((notes) => [{ ...note, id: crypto.randomUUID() }, ...notes]);
+    setNewNote(undefined);
   }
 
-  function updateNotes() {
-    if (noteToEdit === undefined) return;
-    const updatedNotes = notes.filter((note) => note.id !== noteToEdit.id);
-    updatedNotes.unshift({ ...noteToEdit });
-    setNotes(updatedNotes);
-    setNoteToEdit(undefined);
+  function updateNote(note?: Note) {
+    if (note === undefined) return;
+    setNotes((notes) => [
+      { ...note },
+      ...notes.filter((n) => n.id !== note.id),
+    ]);
+    setEditingNote(undefined);
   }
 
-  function removeFromNotes(id: string) {
-    setNotes(notes.filter((note) => note.id !== id));
-    setNoteToEdit(undefined);
+  function removeNote(note?: Note) {
+    if (note === undefined) return;
+    setNotes(notes.filter((n) => n.id !== note.id));
+    setEditingNote(undefined);
   }
 
   return (
@@ -89,18 +83,12 @@ function App() {
               fullWidth
               sx={{ p: 1.5 }}
               placeholder="Take a note..."
-              onClick={() => {
-                setNewNote({
-                  title: "",
-                  content: "",
-                });
-                setIsDetailedInputFirstExpanded(true);
-              }}
+              onClick={() => setNewNote({ id: "", title: "", content: "" })}
             />
           </Card>
         </Box>
       ) : (
-        <ClickAwayListener onClickAway={() => addToNotes()}>
+        <ClickAwayListener onClickAway={() => addNote(newNote)}>
           <Box
             display="flex"
             justifyContent="center"
@@ -110,6 +98,7 @@ function App() {
           >
             <Card variant="outlined" sx={{ minWidth: 600, boxShadow: 3 }}>
               <Input
+                autoFocus={true} // eslint-disable-line jsx-a11y/no-autofocus
                 disableUnderline
                 inputProps={{
                   style: { fontWeight: 700 },
@@ -118,35 +107,26 @@ function App() {
                 multiline
                 sx={{ p: 1.5, mb: 1.5 }}
                 placeholder="Title"
-                onChange={(e) => {
-                  setNewNote({
-                    ...newNote,
-                    title: e.target.value,
-                  });
-                }}
-                inputRef={(input) =>
-                  isDetailedInputFirstExpanded === true && input?.focus()
+                onChange={(e) =>
+                  setNewNote({ ...newNote, title: e.target.value })
                 }
               />
               <Input
                 disableUnderline
-                inputProps={{
-                  style: { fontWeight: 700 },
-                }}
+                inputProps={{ style: { fontWeight: 700 } }}
                 fullWidth
                 multiline
                 sx={{ p: 1.5, mb: 1 }}
                 placeholder="Take a note..."
-                onChange={(e) => {
-                  setNewNote({
-                    ...newNote,
-                    content: e.target.value,
-                  });
-                }}
-                onFocus={() => setIsDetailedInputFirstExpanded(false)}
+                onChange={(e) =>
+                  setNewNote({ ...newNote, content: e.target.value })
+                }
               />
               <CardActions style={{ justifyContent: "flex-end" }}>
-                <Button sx={{ color: "#808080" }} onClick={() => addToNotes()}>
+                <Button
+                  sx={{ color: "#808080" }}
+                  onClick={() => addNote(newNote)}
+                >
                   Close
                 </Button>
               </CardActions>
@@ -161,8 +141,8 @@ function App() {
             alignItems: "center",
             justifyContent: "center",
           }}
-          open={noteToEdit !== undefined}
-          onClose={() => updateNotes()}
+          open={editingNote !== undefined}
+          onClose={() => updateNote(editingNote)}
         >
           <Card variant="outlined" sx={{ width: 600, boxShadow: 3 }}>
             <Input
@@ -174,13 +154,10 @@ function App() {
               multiline
               sx={{ p: 1.5, mb: 1.5 }}
               onChange={(e) => {
-                if (noteToEdit === undefined) return;
-                setNoteToEdit({
-                  ...noteToEdit,
-                  note: { ...noteToEdit["note"], title: e.target.value },
-                });
+                if (editingNote === undefined) return;
+                setEditingNote({ ...editingNote, title: e.target.value });
               }}
-              value={noteToEdit === undefined ? "" : noteToEdit.note.title}
+              value={editingNote?.title ?? ""}
             />
             <Input
               disableUnderline
@@ -191,24 +168,19 @@ function App() {
               multiline
               sx={{ p: 1.5, mb: 1 }}
               onChange={(e) => {
-                if (noteToEdit === undefined) return;
-                setNoteToEdit({
-                  ...noteToEdit,
-                  note: { ...noteToEdit["note"], content: e.target.value },
-                });
+                if (editingNote === undefined) return;
+                setEditingNote({ ...editingNote, content: e.target.value });
               }}
-              value={noteToEdit === undefined ? "" : noteToEdit.note.content}
+              value={editingNote?.content ?? ""}
             />
             <CardActions style={{ justifyContent: "space-between" }}>
-              <IconButton
-                onClick={() => {
-                  if (noteToEdit === undefined) return;
-                  removeFromNotes(noteToEdit.id);
-                }}
-              >
+              <IconButton onClick={() => removeNote(editingNote)}>
                 <Delete> Delete </Delete>
               </IconButton>
-              <Button sx={{ color: "#808080" }} onClick={() => updateNotes()}>
+              <Button
+                sx={{ color: "#808080" }}
+                onClick={() => updateNote(editingNote)}
+              >
                 Close
               </Button>
             </CardActions>
@@ -225,15 +197,15 @@ function App() {
             >
               <CardActionArea
                 onClick={() =>
-                  setNoteToEdit(notes.filter((n) => n.id === note.id)[0])
+                  setEditingNote(notes.filter((n) => n.id === note.id)[0])
                 }
               >
                 <CardContent>
                   <Typography style={{ wordWrap: "break-word" }}>
-                    {note.note.title}
+                    {note.title}
                   </Typography>
                   <Typography style={{ wordWrap: "break-word" }}>
-                    {note.note.content}
+                    {note.content}
                   </Typography>
                 </CardContent>
               </CardActionArea>
