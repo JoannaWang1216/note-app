@@ -15,7 +15,7 @@ import {
   Toolbar,
   Typography,
 } from "@mui/material";
-import * as React from "react";
+import { useEffect, useState } from "react";
 
 function App() {
   type Note = {
@@ -23,19 +23,17 @@ function App() {
     title: string;
     content: string;
   };
-  const [newNote, setNewNote] = React.useState<undefined | Note>(undefined);
+  const [newNote, setNewNote] = useState<undefined | Note>(undefined);
 
   const storedNotes = localStorage.getItem("notes");
-  const [notes, setNotes] = React.useState<Note[]>(
+  const [notes, setNotes] = useState<Note[]>(
     storedNotes ? JSON.parse(storedNotes) : [],
   );
-  React.useEffect(() => {
+  useEffect(() => {
     localStorage.setItem("notes", JSON.stringify(notes));
   }, [notes]);
 
-  const [editingNote, setEditingNote] = React.useState<undefined | Note>(
-    undefined,
-  );
+  const [editingNote, setEditingNote] = useState<undefined | Note>(undefined);
 
   function addNote(note?: Note) {
     if (note === undefined) return;
