@@ -203,7 +203,7 @@ function App() {
             >
               <CardActionArea
                 onClick={() =>
-                  setEditingNote(notes.filter((n) => n.id === note.id)[0])
+                  setEditingNote(notes.find((n) => n.id === note.id))
                 }
               >
                 <CardContent>
