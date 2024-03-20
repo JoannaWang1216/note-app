@@ -65,7 +65,7 @@ jobs:
         run: poetry install --no-interaction --no-root
 
       - name: Lint
-        run: poetry run pylint .
+        run: poetry run pylint src tests
 
   server-test:
     runs-on: ubuntu-latest
