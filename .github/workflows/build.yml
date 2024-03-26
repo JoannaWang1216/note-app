@@ -65,7 +65,10 @@ jobs:
         run: poetry install --no-interaction --no-root
 
       - name: Lint
-        run: poetry run pylint src tests
+        run: |
+          poetry run black --check .
+          poetry run pylint src tests
+          poetry run mypy .
 
   server-test:
     runs-on: ubuntu-latest
