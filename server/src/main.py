@@ -48,15 +48,11 @@ async def add_note(note: NoteWrite):
 
 @app.put("/api/notes/{uuid}", dependencies=[Depends(get_note)])
 async def update_note(uuid: UUID4, note_write: NoteWrite):
+    updated_note = Note(id=uuid, title=note_write.title, content=note_write.content)
     notes_store.notes = [
-        (
-            Note(id=uuid, title=note_write.title, content=note_write.content)
-            if n.id == uuid
-            else n
-        )
-        for n in notes_store.notes
+        (updated_note if n.id == uuid else n) for n in notes_store.notes
     ]
-    return note_write
+    return updated_note
 
 
 @app.delete("/api/notes/{uuid}")
