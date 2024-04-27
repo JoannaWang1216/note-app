@@ -25,12 +25,18 @@ function App() {
   };
   const [newNote, setNewNote] = useState<undefined | Note>(undefined);
 
-  const storedNotes = localStorage.getItem("notes");
-  const [notes, setNotes] = useState<Note[]>(
-    storedNotes ? JSON.parse(storedNotes) : [],
-  );
+  const [notes, setNotes] = useState<Note[]>([]);
   useEffect(() => {
-    localStorage.setItem("notes", JSON.stringify(notes));
+    fetch("http://127.0.0.1:8000/api/notes", { method: "GET" })
+      .then((response) => response.json())
+      .then((data) => setNotes(data));
+  }, []);
+  useEffect(() => {
+    fetch("http://127.0.0.1:8000/api/notes", {
+      method: "POST",
+      body: JSON.stringify(notes),
+      headers: { "Content-Type": "application/json" },
+    });
   }, [notes]);
 
   const [editingNote, setEditingNote] = useState<undefined | Note>(undefined);
