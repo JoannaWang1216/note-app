@@ -31,13 +31,6 @@ function App() {
       .then((response) => response.json())
       .then((data) => setNotes(data));
   }, []);
-  useEffect(() => {
-    fetch("http://127.0.0.1:8000/api/notes", {
-      method: "POST",
-      body: JSON.stringify(notes),
-      headers: { "Content-Type": "application/json" },
-    });
-  }, [notes]);
 
   const [editingNote, setEditingNote] = useState<undefined | Note>(undefined);
 
@@ -47,22 +40,36 @@ function App() {
       setNewNote(undefined);
       return;
     }
-    setNotes((notes) => [{ ...note, id: crypto.randomUUID() }, ...notes]);
+    fetch("http://127.0.0.1:8000/api/notes", {
+      method: "POST",
+      body: JSON.stringify(note),
+      headers: { "Content-Type": "application/json" },
+    })
+      .then(() => fetch("http://127.0.0.1:8000/api/notes", { method: "GET" }))
+      .then((response) => response.json())
+      .then((data) => setNotes(data));
     setNewNote(undefined);
   }
 
   function updateNote(note?: Note) {
     if (note === undefined) return;
-    setNotes((notes) => [
-      { ...note },
-      ...notes.filter((n) => n.id !== note.id),
-    ]);
+    fetch(`http://127.0.0.1:8000/api/notes/${note.id}`, {
+      method: "PUT",
+      body: JSON.stringify(note),
+      headers: { "Content-Type": "application/json" },
+    })
+      .then(() => fetch("http://127.0.0.1:8000/api/notes", { method: "GET" }))
+      .then((response) => response.json())
+      .then((data) => setNotes(data));
     setEditingNote(undefined);
   }
 
   function removeNote(note?: Note) {
     if (note === undefined) return;
-    setNotes(notes.filter((n) => n.id !== note.id));
+    fetch(`http://127.0.0.1:8000/api/notes/${note.id}`, { method: "DELETE" })
+      .then(() => fetch("http://127.0.0.1:8000/api/notes", { method: "GET" }))
+      .then((response) => response.json())
+      .then((data) => setNotes(data));
     setEditingNote(undefined);
   }
 
