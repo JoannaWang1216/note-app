@@ -2,7 +2,21 @@ from typing import Annotated, MutableSequence
 from uuid import uuid4
 
 from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import UUID4, BaseModel
+
+origins = [
+    "http://localhost:3000",
+]
+
+app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 class NoteWrite(BaseModel):
@@ -12,9 +26,6 @@ class NoteWrite(BaseModel):
 
 class Note(NoteWrite):
     id: UUID4
-
-
-app = FastAPI()
 
 
 class NotesStore:  # pylint: disable=too-few-public-methods
