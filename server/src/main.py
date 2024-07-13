@@ -37,9 +37,7 @@ class NoteWrite(BaseModel):
 @app.get("/api/notes")
 async def get_notes(session: Annotated[Session, Depends(get_session)]):
     notes = session.exec(
-        select(models.Note).order_by(
-            models.Note.created_at.desc()  # pylint: disable=no-member # type: ignore
-        )
+        select(models.Note).order_by(models.Note.created_at.desc())  # type: ignore # pylint: disable=no-member
     ).all()
     return notes
 

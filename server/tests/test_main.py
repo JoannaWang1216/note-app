@@ -1,6 +1,6 @@
 from uuid import uuid4
 
-import src.models  # pylint: disable=unused-import
+import src.models  # pylint: disable=unused-import, wrong-import-order
 from fastapi.testclient import TestClient
 from pytest import fixture
 from sqlmodel import Session, SQLModel, create_engine, delete

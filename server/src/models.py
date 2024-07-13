@@ -14,6 +14,7 @@ class Note(SQLModel, table=True):
         default_factory=lambda: datetime.datetime.now(datetime.UTC)
     )
 
+    # WORKAROUND: for unknown reason, sometimes SQLModel serialize datetime without the suffix 'Z'
     @field_serializer("created_at")
     def serialize_created_at(self, created_at: datetime.datetime, _info):
         if created_at.isoformat().endswith("+00:00"):
