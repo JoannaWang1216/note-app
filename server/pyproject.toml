@@ -8,6 +8,7 @@ authors = ["Joanna Wang <joannaahj@gmail.com>"]
 python = "~3.12"
 fastapi = "^0.110.1"
 uvicorn = {extras = ["standard"], version = "^0.29.0"}
+sqlmodel = "^0.0.19"
 
 
 [tool.poetry.group.dev.dependencies]

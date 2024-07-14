@@ -1,14 +1,36 @@
 from uuid import uuid4
 
+import src.models  # pylint: disable=unused-import, wrong-import-order
 from fastapi.testclient import TestClient
 from pytest import fixture
-from src.main import app, notes_store
+from sqlmodel import Session, SQLModel, create_engine, delete
+from sqlmodel.pool import StaticPool
+from src.main import app, get_session
 
-client = TestClient(app)
+
+@fixture(name="session")
+def session_fixture():
+    engine = create_engine(
+        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
+    )
+    SQLModel.metadata.create_all(engine)
+    with Session(engine) as session:
+        yield session
+
+
+@fixture(name="client")
+def client_fixture(session: Session):
+    def get_session_override():
+        return session
+
+    app.dependency_overrides[get_session] = get_session_override
+    client = TestClient(app)
+    yield client
+    app.dependency_overrides.clear()
 
 
 @fixture
-def note():
+def note(client: TestClient):
     response = client.get("/api/notes")
     assert response.status_code == 200
     assert response.json() == []
@@ -18,13 +40,16 @@ def note():
     assert new_note["title"] == "title"
     assert new_note["content"] == "content"
     assert "id" in new_note
+    assert "created_at" in new_note
     response = client.get("/api/notes")
     assert response.status_code == 200
     assert response.json() == [new_note]
     return new_note
 
 
-def test_update_note(note: dict):  # pylint: disable=redefined-outer-name
+def test_update_note(
+    client: TestClient, note: dict
+):  # pylint: disable=redefined-outer-name
     response = client.put(
         f"/api/notes/{note['id']}",
         json={"title": "new title", "content": "new content"},
@@ -38,7 +63,7 @@ def test_update_note(note: dict):  # pylint: disable=redefined-outer-name
     assert response.json() == [updated_note]
 
 
-def test_update_note_not_found():
+def test_update_note_not_found(client: TestClient):
     response = client.put(
         f"/api/notes/{uuid4()}",
         json={"title": "new title", "content": "new content"},
@@ -47,7 +72,9 @@ def test_update_note_not_found():
     assert response.json() == {"detail": "Item not found"}
 
 
-def test_delete_note(note: dict):  # pylint: disable=redefined-outer-name
+def test_delete_note(
+    client: TestClient, note: dict
+):  # pylint: disable=redefined-outer-name
     response = client.delete(f"/api/notes/{note['id']}")
     assert response.status_code == 200
     assert response.json() == note
@@ -56,13 +83,14 @@ def test_delete_note(note: dict):  # pylint: disable=redefined-outer-name
     assert response.json() == []
 
 
-def test_delete_note_not_found():
+def test_delete_note_not_found(client: TestClient):
     response = client.delete(f"/api/notes/{uuid4()}")
     assert response.status_code == 404
     assert response.json() == {"detail": "Item not found"}
 
 
 @fixture(autouse=True)
-def reset_notes_store():
+def reset_notes_database(session: Session):
     yield
-    notes_store.notes = []
+    session.exec(delete(src.models.Note))  # type: ignore[call-overload]
+    session.commit()
